@@ -1,11 +1,10 @@
-// User.jsx
 import React from 'react';
 import AccountSection from '../../components/AccountSection';
 
-const User = () => {
+const Profile = () => {
     return (
             <AccountSection />
     );
 };
 
-export default User;
+export default Profile;
