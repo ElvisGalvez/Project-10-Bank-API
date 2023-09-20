@@ -1,21 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { logOut } from '../../redux/reducers';
 import Logo from '../../components/Logos';
 import './NavBar.css';
 
 const NavBar = () => {
-  const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    // Vérifie si l'utilisateur est authentifié (simplifié en vérifiant un token dans le localStorage)
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, [location]);
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
 
   const handleSignOut = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/';
+    dispatch(logOut()); // Utilise l'action Redux pour se déconnecter
+    // Est-ce que j'utilise ReactRouter, plutôt ? 
   };
 
   return (
