@@ -1,10 +1,6 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { authReducer } from './reducers';  
-
-// Pour les états innitiaux :
-// const initialState = {
-//     ...,
-// };
+import { authReducer } from './reducers';
+import { authMiddleware } from './middlewares';
 
 const rootReducer = combineReducers({
     auth: authReducer,
@@ -13,7 +9,7 @@ const rootReducer = combineReducers({
 
 const store = configureStore({
   reducer: rootReducer,
-  // preloadedState: initialState, pour ajouter un état innitial au store
+  middleware: getDefaultMiddleware => getDefaultMiddleware().concat(authMiddleware),
 });
 
 export default store;

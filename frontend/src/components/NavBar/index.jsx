@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logOut } from '../../redux/reducers';
 import Logo from '../../components/Logos';
@@ -6,11 +7,13 @@ import './NavBar.css';
 
 const NavBar = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  const user = useSelector(state => state.auth.user);
 
   const handleSignOut = () => {
-    dispatch(logOut()); // Utilise l'action Redux pour se déconnecter
-    // Est-ce que j'utilise ReactRouter, plutôt ? 
+    dispatch(logOut());
+    navigate("/login");
   };
 
   return (
@@ -24,13 +27,12 @@ const NavBar = () => {
           <>
             <Link className="main-nav-item" to="/profile">
               <i className="fa fa-user-circle user-icon"></i>
-              Tony
+              {user ? user.firstName : "User"}
             </Link>
-            <Link className="main-nav-item" to="/login" onClick={handleSignOut}>
+            <button className="main-nav-item" onClick={handleSignOut}>
               <i className="fa fa-sign-out user-icon"></i>
               Sign Out
-            </Link>
-
+            </button>
           </>
         ) : (
           <Link className="main-nav-item" to="/login">

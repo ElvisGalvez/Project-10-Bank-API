@@ -1,37 +1,25 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { logInRequestAction as logInRequest } from '../../redux/actions';
 import './Login.css';
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-
-    const username = event.target.username.value;
+    const email = event.target.email.value;
     const password = event.target.password.value;
 
-    // Utilise l'API pour se connecter
-    const response = await fetch("http://localhost:3001/api/v1/user/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email: username, // Suppose que c'est un email plutôt qu'un nom d'utilisateur
-        password
+    dispatch(logInRequest(email, password))
+      .then(() => {
+        navigate("/profile");
       })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Stocke le token JWT 
-      localStorage.setItem('token', data.token);
-
-      // Redirige vers la page de l'utilisateur
-      window.location.href = "/profile";
-    } else {
-      alert(data.message || "Erreur lors de la connexion");
-    }
+      .catch(error => {
+        console.error("Erreur lors de la connexion:", error);
+      });
   };
 
   return (
@@ -42,8 +30,8 @@ const Login = () => {
           <h1>Sign In</h1>
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
-              <label htmlFor="username">Username</label>
-              <input type="text" id="username" name="username" />
+              <label htmlFor="email">Email</label>
+              <input type="text" id="email" name="email" />
             </div>
             <div className="input-wrapper">
               <label htmlFor="password">Password</label>
