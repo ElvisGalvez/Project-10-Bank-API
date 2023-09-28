@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
 
 // Une action asynchrone pour chercher les détails de l'utilisateur
 export const fetchUserDetails = createAsyncThunk(
@@ -12,20 +11,28 @@ export const fetchUserDetails = createAsyncThunk(
     }
 
     try {
-      const response = await axios.post('http://localhost:3001/api/v1/user/profile', {}, {
+      const response = await fetch('http://localhost:3001/api/v1/user/profile', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
-      const userDetails = response.data.body;
-      return userDetails;
+      const data = await response.json();
+
+      if (response.ok) {
+        return data.body;
+      } else {
+        throw new Error(data.message || 'Failed to fetch user details');
+      }
     } catch (error) {
       console.error('Error fetching user details:', error);
       return rejectWithValue(error.message || 'Failed to fetch user details');
     }
   }
 );
+
 
 const authSlice = createSlice({
   name: 'auth',

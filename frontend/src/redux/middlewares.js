@@ -1,72 +1,77 @@
-import { fetchUserDetails, authSlice, updateProfileSuccess, updateProfileFailure } from './reducers';
+import { fetchUserDetails } from './reducers';
+import * as actionTypes from './actionsTypes';
+import { 
+    logInSuccess, 
+    logInFailure, 
+    updateProfileSuccessAction as updateProfileSuccess, 
+    updateProfileFailureAction as updateProfileFailure
+} from './actions';
 
-const { logInSuccess, logInFailure } = authSlice.actions;
+// les URL de l'API en constantes
+const LOGIN_API_URL = "http://localhost:3001/api/v1/user/login";
+const PROFILE_API_URL = "http://localhost:3001/api/v1/user/profile";
 
+// Middleware pour l'authentification
 export const authMiddleware = store => next => async action => {
-    next(action);
+  next(action);
 
-    if (action.type === 'APP_INITIALIZE') {
-        const token = localStorage.getItem('token');
-        if (token) {
-            store.dispatch(fetchUserDetails());  // Fetch user details si le token existe
-        }
+  if (action.type === actionTypes.APP_INITIALIZE) {
+    const token = localStorage.getItem('token');
+    if (token) {
+      store.dispatch(fetchUserDetails());
     }
+  }
 
-    if (action.type === 'auth/logInSuccess') {
-        store.dispatch(fetchUserDetails());  // Dispatche la thunk après une connexion réussie
+  if (action.type === actionTypes.LOGIN_SUCCESS) {
+    store.dispatch(fetchUserDetails());
+  }
+
+  if (action.type === actionTypes.LOGIN_REQUEST) {
+    const { email, password } = action.payload;
+
+    const response = await fetch(LOGIN_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      localStorage.setItem('token', data.body.token);
+      store.dispatch(logInSuccess());
+    } else {
+      store.dispatch(logInFailure(data.message || "Erreur lors de la connexion"));
     }
+  }
+};
 
-    if (action.type === 'LOGIN_REQUEST') {
-        console.log("Logging in with email:", action.payload.email);
-        const { email, password } = action.payload;
+// Middleware pour la gestion du profil
+export const profileMiddleware = store => next => async action => {
+  next(action);
 
-        const response = await fetch("http://localhost:3001/api/v1/user/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password })
-        });
+  if (action.type === actionTypes.UPDATE_PROFILE_REQUEST) {
+    const { firstName, lastName } = action.payload;
+    const token = localStorage.getItem('token');
 
-        const data = await response.json();
-        console.log("API Response Data:", data);
+    const response = await fetch(PROFILE_API_URL, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ firstName, lastName })
+    });
 
-        if (response.ok) {
-            console.log("Login successful with token:", data.body.token);
-            localStorage.setItem('token', data.body.token);
-            store.dispatch(logInSuccess());  // Dispatche logInSuccess après avoir stocké le token
-        } else {
-            console.log("Login failed with message:", data.message);
-            store.dispatch(logInFailure(data.message || "Erreur lors de la connexion"));
-        }
+    const data = await response.json();
+
+    if (response.ok) {
+      store.dispatch(updateProfileSuccess(data.body));
+    } else {
+      store.dispatch(updateProfileFailure(data.message || "Failed to update profile"));
     }
-
-    if (action.type === 'UPDATE_PROFILE_REQUEST') {
-        console.log("Updating profile with:", action.payload);
-        const { firstName, lastName } = action.payload;
-        const token = localStorage.getItem('token');
-
-        const response = await fetch("http://localhost:3001/api/v1/user/profile", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ firstName, lastName })
-        });
-
-        const data = await response.json();
-        console.log("API Update Profile Response:", data);
-
-        if (response.ok) {
-            console.log("Profile updated successfully:", data.body.user);
-            store.dispatch(updateProfileSuccess(data.body));
-        } else {
-            console.log("Profile update failed with message:", data.message);
-            store.dispatch(updateProfileFailure(data.message || "Failed to update profile"));
-        }
-
-    }
-
+  }
 };
 
