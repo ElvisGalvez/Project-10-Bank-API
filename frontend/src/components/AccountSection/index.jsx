@@ -4,7 +4,6 @@ import './AccountSection.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateProfileRequestAction } from '../../redux/actions';
 
-
 const AccountSection = () => {
   const accounts = [
     { title: 'Argent Bank Checking (x8349)', amount: '$2,082.79', description: 'Available Balance' },
@@ -13,23 +12,35 @@ const AccountSection = () => {
   ];
 
   const user = useSelector(state => state.auth.user);
-
-  // États locaux pour la gestion du formulaire d'édition
+  
   const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState(user ? user.firstName : "");
   const [lastName, setLastName] = useState(user ? user.lastName : "");
 
   const dispatch = useDispatch();
 
-  // Gestionnaire d'événement pour sauvegarder le profil mis à jour
   const handleSaveProfile = () => {
     if (firstName.trim() === "" || lastName.trim() === "") {
       alert("First name and last name cannot be empty!");
       return;
     }
-
     dispatch(updateProfileRequestAction(firstName, lastName));
     setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    if (user) {
+      setFirstName(user.firstName);
+      setLastName(user.lastName);
+    }
+    setIsEditing(false);
+  };
+
+  const renderUserName = () => {
+    if (user) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    return null;
   };
 
   return (
@@ -37,7 +48,7 @@ const AccountSection = () => {
       <div className="header">
         <h1>
           Welcome back<br />
-          {user ? user.firstName + " " + user.lastName : "Guest"}
+          {renderUserName()}
         </h1>
         {isEditing ? (
           <>
@@ -50,7 +61,7 @@ const AccountSection = () => {
               onChange={(e) => setLastName(e.target.value)}
             />
             <button onClick={handleSaveProfile} className="edit-button">Save</button>
-            <button onClick={() => setIsEditing(false)} className="edit-button">Cancel</button>
+            <button onClick={handleCancel} className="edit-button">Cancel</button>
           </>
         ) : (
           <button onClick={() => setIsEditing(true)} className="edit-button">Edit Name</button>

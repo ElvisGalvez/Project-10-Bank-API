@@ -1,20 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logInRequestAction as logInRequest } from '../../redux/actions';
+import { logOut } from '../../redux/reducers';
 import './Login.css';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // Ajout des états pour gérer les valeurs d'email et de mot de passe
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    // Récupération des données stockées si la case "Remember Me" avait été cochée
+    const storedEmail = localStorage.getItem('rememberEmail');
+    const storedPassword = localStorage.getItem('rememberPassword');
+
+    if (storedEmail && storedPassword) {
+      setEmail(storedEmail);
+      setPassword(storedPassword);
+      setRememberMe(true);
+    }
+
+    // Effet pour supprimer le token et déclencher une action de déconnexion
+    localStorage.removeItem('token');
+    dispatch(logOut());
+
+  }, [dispatch]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const email = event.target.email.value;
-    const password = event.target.password.value;
 
     dispatch(logInRequest(email, password))
       .then(() => {
+        if (rememberMe) {
+          localStorage.setItem('rememberEmail', email);
+          localStorage.setItem('rememberPassword', password);
+        } else {
+          localStorage.removeItem('rememberEmail');
+          localStorage.removeItem('rememberPassword');
+        }
+
         navigate("/profile");
       })
       .catch(error => {
@@ -31,14 +60,14 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label htmlFor="email">Email</label>
-              <input type="text" id="email" name="email" />
+              <input type="text" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="input-wrapper">
               <label htmlFor="password">Password</label>
-              <input type="password" id="password" name="password" />
+              <input type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             <div className="input-remember">
-              <input type="checkbox" id="remember-me" />
+              <input type="checkbox" id="remember-me" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
               <label htmlFor="remember-me">Remember me</label>
             </div>
             <button type="submit" className="sign-in-button">Sign In</button>

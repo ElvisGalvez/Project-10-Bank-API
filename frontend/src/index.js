@@ -8,23 +8,39 @@ import Footer from './components/Footer';
 import NavBar from './components/NavBar';  
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
-import { Provider, useDispatch } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import store from './redux/store';  
-import { initializeApp } from './redux/actions';
+import { initializeApp} from './redux/actions';  
+import { logOut } from './redux/reducers';
 
 function AppInitializer({ children }) {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);  
 
-    useEffect(() => {
-        dispatch(initializeApp());  // Dispatch the initialize action once on first render
-    }, [dispatch]);
+  useEffect(() => {
+    dispatch(initializeApp());  // Dispatch l'action d'initialisation une fois au premier rendu
+  }, [dispatch]);
 
-    return children;
+  // useEffect pour écouter les changements dans l'historique de navigation
+  useEffect(() => {
+    const unlisten = window.addEventListener('popstate', () => {
+      if (!isAuthenticated) return;  // Pas besoin de déconnecter si déjà déconnecté
+
+      dispatch(logOut());
+    });
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', unlisten);
+    };
+  }, [isAuthenticated, dispatch]);
+
+  return children;
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-//le Provider rends le store disponible pour tous les composants de l'application
+// Le Provider rend le store disponible pour tous les composants de l'application
 root.render(
   <React.StrictMode>
     <Provider store={store}> 

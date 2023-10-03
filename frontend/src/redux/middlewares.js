@@ -1,77 +1,64 @@
-import { fetchUserDetails } from './reducers';
-import * as actionTypes from './actionsTypes';
-import { 
-    logInSuccess, 
-    logInFailure, 
-    updateProfileSuccessAction as updateProfileSuccess, 
-    updateProfileFailureAction as updateProfileFailure
-} from './actions';
+import axios from 'axios';
+import { authSlice, updateProfileSuccess, updateProfileFailure } from './reducers';
+import { fetchUserDetails } from './actions';
 
-// les URL de l'API en constantes
-const LOGIN_API_URL = "http://localhost:3001/api/v1/user/login";
-const PROFILE_API_URL = "http://localhost:3001/api/v1/user/profile";
+const { logInSuccess, logInFailure } = authSlice.actions;
 
-// Middleware pour l'authentification
+const handleAppInitialize = (store) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    store.dispatch(fetchUserDetails());
+  }
+};
+
+const handleLoginRequest = async (store, action) => {
+  const { email, password } = action.payload;
+  try {
+    const response = await axios.post('http://localhost:3001/api/v1/user/login', {
+      email,
+      password,
+    });
+    localStorage.setItem('token', response.data.body.token);
+    store.dispatch(logInSuccess());
+  } catch (error) {
+    store.dispatch(logInFailure(error.response.data.message || 'Erreur lors de la connexion'));
+  }
+};
+
+const handleUpdateProfileRequest = async (store, action) => {
+  const { firstName, lastName } = action.payload;
+  const token = localStorage.getItem('token');
+  try {
+    const response = await axios.put('http://localhost:3001/api/v1/user/profile', {
+      firstName,
+      lastName,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    store.dispatch(updateProfileSuccess(response.data.body));
+  } catch (error) {
+    store.dispatch(updateProfileFailure(error.response.data.message || 'Failed to update profile'));
+  }
+};
+
 export const authMiddleware = store => next => async action => {
   next(action);
 
-  if (action.type === actionTypes.APP_INITIALIZE) {
-    const token = localStorage.getItem('token');
-    if (token) {
-      store.dispatch(fetchUserDetails());
-    }
+  if (action.type === 'APP_INITIALIZE') {
+    handleAppInitialize(store);
   }
 
-  if (action.type === actionTypes.LOGIN_SUCCESS) {
+  if (action.type === 'auth/logInSuccess') {
     store.dispatch(fetchUserDetails());
   }
 
-  if (action.type === actionTypes.LOGIN_REQUEST) {
-    const { email, password } = action.payload;
+  if (action.type === 'LOGIN_REQUEST') {
+    handleLoginRequest(store, action);
+  }
 
-    const response = await fetch(LOGIN_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      localStorage.setItem('token', data.body.token);
-      store.dispatch(logInSuccess());
-    } else {
-      store.dispatch(logInFailure(data.message || "Erreur lors de la connexion"));
-    }
+  if (action.type === 'UPDATE_PROFILE_REQUEST') {
+    handleUpdateProfileRequest(store, action);
   }
 };
-
-// Middleware pour la gestion du profil
-export const profileMiddleware = store => next => async action => {
-  next(action);
-
-  if (action.type === actionTypes.UPDATE_PROFILE_REQUEST) {
-    const { firstName, lastName } = action.payload;
-    const token = localStorage.getItem('token');
-
-    const response = await fetch(PROFILE_API_URL, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ firstName, lastName })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      store.dispatch(updateProfileSuccess(data.body));
-    } else {
-      store.dispatch(updateProfileFailure(data.message || "Failed to update profile"));
-    }
-  }
-};
-

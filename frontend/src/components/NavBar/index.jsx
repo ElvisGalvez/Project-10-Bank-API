@@ -16,6 +16,13 @@ const NavBar = () => {
     navigate("/login");
   };
 
+  const renderUserName = () => {
+    if (user) {
+      return user.firstName;
+    }
+    return null;
+  };
+
   return (
     <nav className="main-nav">
       <Link className="main-nav-logo" to="/">
@@ -27,7 +34,7 @@ const NavBar = () => {
           <>
             <Link className="main-nav-item" to="/profile">
               <i className="fa fa-user-circle user-icon"></i>
-              {user ? user.firstName : "User"}
+              {renderUserName()}
             </Link>
             <button className="main-nav-item" onClick={handleSignOut}>
               <i className="fa fa-sign-out user-icon"></i>
