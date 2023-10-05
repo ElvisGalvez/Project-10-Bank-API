@@ -24,7 +24,9 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
     toggleEditing: (state) => {
+      console.log("Avant : ", state.isEditing);
       state.isEditing = !state.isEditing;
+      console.log("Après : ", state.isEditing);
     },
     setFirstName: (state, action) => {
       state.editingFirstName = action.payload;

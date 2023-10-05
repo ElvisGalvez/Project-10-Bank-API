@@ -33,7 +33,13 @@ const Login = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
+  
+  
+    if (email.trim() === '' || password.trim() === '') {
+      console.error("L'email ou le mot de passe ne peut pas être vide");
+      return;
+    }
+  
     dispatch(logInRequest(email, password))
       .then(() => {
         if (rememberMe) {
@@ -43,13 +49,13 @@ const Login = () => {
           localStorage.removeItem('rememberEmail');
           localStorage.removeItem('rememberPassword');
         }
-
         navigate("/profile");
       })
       .catch(error => {
         console.error("Erreur lors de la connexion:", error);
       });
   };
+
 
   return (
     <>

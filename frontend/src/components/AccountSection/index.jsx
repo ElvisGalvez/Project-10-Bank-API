@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import AccountItem from '../../components/AccountItem';
 import './AccountSection.css';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfileRequestAction } from '../../redux/actions';
+import { updateProfileRequestAction} from '../../redux/actions'; 
+import { toggleEditing } from '../../redux/reducers';
 
 const AccountSection = () => {
   const accounts = [
@@ -12,12 +13,22 @@ const AccountSection = () => {
   ];
 
   const user = useSelector(state => state.auth.user);
-  
-  const [isEditing, setIsEditing] = useState(false);
+  const isEditing = useSelector((state) => {
+    console.log("Valeur actuelle de isEditing dans useSelector: ", state.auth.isEditing);
+    return state.auth.isEditing;
+  });
+  console.log('Valeur actuelle de isEditing: ', isEditing);
+
   const [firstName, setFirstName] = useState(user ? user.firstName : "");
   const [lastName, setLastName] = useState(user ? user.lastName : "");
+  
 
   const dispatch = useDispatch();
+  const handleClick = () => {
+    console.log("handleClick est appelé");
+    dispatch(toggleEditing());
+  };
+
 
   const handleSaveProfile = () => {
     if (firstName.trim() === "" || lastName.trim() === "") {
@@ -25,7 +36,7 @@ const AccountSection = () => {
       return;
     }
     dispatch(updateProfileRequestAction(firstName, lastName));
-    setIsEditing(false);
+    dispatch(toggleEditing()); 
   };
 
   const handleCancel = () => {
@@ -33,7 +44,7 @@ const AccountSection = () => {
       setFirstName(user.firstName);
       setLastName(user.lastName);
     }
-    setIsEditing(false);
+    dispatch(toggleEditing()); 
   };
 
   const renderUserName = () => {
@@ -42,6 +53,7 @@ const AccountSection = () => {
     }
     return null;
   };
+  console.log("Is Editing:", isEditing);
 
   return (
     <main className="main bg-dark">
@@ -64,7 +76,7 @@ const AccountSection = () => {
             <button onClick={handleCancel} className="edit-button">Cancel</button>
           </>
         ) : (
-          <button onClick={() => setIsEditing(true)} className="edit-button">Edit Name</button>
+<button onClick={handleClick} className="edit-button">Edit Name</button>    
         )}
       </div>
       <h2 className="sr-only">Accounts</h2>

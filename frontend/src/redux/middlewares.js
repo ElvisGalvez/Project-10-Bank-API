@@ -19,9 +19,9 @@ const handleLoginRequest = async (store, action) => {
       password,
     });
     localStorage.setItem('token', response.data.body.token);
-    store.dispatch(logInSuccess());
+    store.dispatch(logInSuccess(response.data.body));  // Envoie le corps de la réponse pour mettre à jour les détails de l'utilisateur
   } catch (error) {
-    store.dispatch(logInFailure(error.response.data.message || 'Erreur lors de la connexion'));
+    store.dispatch(logInFailure(error.response ? error.response.data.message : 'Erreur lors de la connexion'));
   }
 };
 
@@ -44,6 +44,7 @@ const handleUpdateProfileRequest = async (store, action) => {
 };
 
 export const authMiddleware = store => next => async action => {
+  console.log('Middleware triggered:', action);  // penser à supprimer ce log
   next(action);
 
   if (action.type === 'APP_INITIALIZE') {
