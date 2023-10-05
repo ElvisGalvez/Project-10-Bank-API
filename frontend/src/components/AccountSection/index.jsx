@@ -14,10 +14,8 @@ const AccountSection = () => {
 
   const user = useSelector(state => state.auth.user);
   const isEditing = useSelector((state) => {
-    console.log("Valeur actuelle de isEditing dans useSelector: ", state.auth.isEditing);
     return state.auth.isEditing;
   });
-  console.log('Valeur actuelle de isEditing: ', isEditing);
 
   const [firstName, setFirstName] = useState(user ? user.firstName : "");
   const [lastName, setLastName] = useState(user ? user.lastName : "");
@@ -25,7 +23,6 @@ const AccountSection = () => {
 
   const dispatch = useDispatch();
   const handleClick = () => {
-    console.log("handleClick est appelé");
     dispatch(toggleEditing());
   };
 
@@ -53,7 +50,6 @@ const AccountSection = () => {
     }
     return null;
   };
-  console.log("Is Editing:", isEditing);
 
   return (
     <main className="main bg-dark">

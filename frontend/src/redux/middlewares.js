@@ -44,7 +44,6 @@ const handleUpdateProfileRequest = async (store, action) => {
 };
 
 export const authMiddleware = store => next => async action => {
-  console.log('Middleware triggered:', action);  // penser à supprimer ce log
   next(action);
 
   if (action.type === 'APP_INITIALIZE') {
@@ -62,4 +61,8 @@ export const authMiddleware = store => next => async action => {
   if (action.type === 'UPDATE_PROFILE_REQUEST') {
     handleUpdateProfileRequest(store, action);
   }
+  if (action.type === 'auth/logOut') {
+    localStorage.removeItem('token');
+  }
+  
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logInRequestAction as logInRequest } from '../../redux/actions';
-import { logOut } from '../../redux/reducers';
+
 import './Login.css';
 
 const Login = () => {
@@ -25,10 +25,6 @@ const Login = () => {
       setRememberMe(true);
     }
 
-    // Effet pour supprimer le token et déclencher une action de déconnexion
-    localStorage.removeItem('token');
-    dispatch(logOut());
-
   }, [dispatch]);
 
   const handleSubmit = (event) => {
@@ -36,7 +32,7 @@ const Login = () => {
   
   
     if (email.trim() === '' || password.trim() === '') {
-      console.error("L'email ou le mot de passe ne peut pas être vide");
+
       return;
     }
   
