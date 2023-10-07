@@ -8,6 +8,8 @@ const authSlice = createSlice({
     user: null,
     error: null,
     isEditing: false,
+    editingFirstName: "",
+    editingLastName: "",
   },
   reducers: {
     logOut: (state) => {
@@ -23,6 +25,13 @@ const authSlice = createSlice({
     },
     toggleEditing: (state) => {
       state.isEditing = !state.isEditing;
+    },
+
+    updateEditingFirstName: (state, action) => {
+      state.editingFirstName = action.payload;
+    },
+    updateEditingLastName: (state, action) => {
+      state.editingLastName = action.payload;
     },
 
     updateProfileSuccess: (state, action) => {
@@ -43,6 +52,10 @@ const authSlice = createSlice({
   }
 });
 
-export const { logOut, logInSuccess, logInFailure, updateProfileSuccess, updateProfileFailure, toggleEditing } = authSlice.actions;
+export const { 
+  logOut, logInSuccess, logInFailure, 
+  updateProfileSuccess, updateProfileFailure, 
+  toggleEditing, updateEditingFirstName, updateEditingLastName 
+} = authSlice.actions;
 export const authReducer = authSlice.reducer;
 export { authSlice };

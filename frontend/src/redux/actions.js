@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { apiRequest } from './middlewares';  
 
 export const fetchUserDetails = createAsyncThunk(
   'auth/fetchUserDetails',
@@ -10,16 +10,13 @@ export const fetchUserDetails = createAsyncThunk(
       return rejectWithValue('Token is not available');
     }
 
-    try {
-      const response = await axios.post('http://localhost:3001/api/v1/user/profile', {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      const userDetails = response.data.body;
-      return userDetails;
-    } catch (error) {
+    const [data, error] = await apiRequest('post', 'http://localhost:3001/api/v1/user/profile', {}, {
+      'Authorization': `Bearer ${token}`
+    });
+
+    if (data) {
+      return data.body;
+    } else {
       return rejectWithValue(error.message || 'Failed to fetch user details');
     }
   }

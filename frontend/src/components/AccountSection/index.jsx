@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import AccountItem from '../../components/AccountItem';
 import './AccountSection.css';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfileRequestAction} from '../../redux/actions'; 
-import { toggleEditing } from '../../redux/reducers';
+import { updateProfileRequestAction } from '../../redux/actions';
+import { 
+  toggleEditing,
+  updateEditingFirstName,
+  updateEditingLastName 
+} from '../../redux/reducers';
 
 const AccountSection = () => {
   const accounts = [
@@ -13,33 +17,29 @@ const AccountSection = () => {
   ];
 
   const user = useSelector(state => state.auth.user);
-  const isEditing = useSelector((state) => {
-    return state.auth.isEditing;
-  });
-
-  const [firstName, setFirstName] = useState(user ? user.firstName : "");
-  const [lastName, setLastName] = useState(user ? user.lastName : "");
-  
+  const isEditing = useSelector(state => state.auth.isEditing);
+  const editingFirstName = useSelector(state => state.auth.editingFirstName);
+  const editingLastName = useSelector(state => state.auth.editingLastName);
 
   const dispatch = useDispatch();
+
   const handleClick = () => {
     dispatch(toggleEditing());
   };
 
-
   const handleSaveProfile = () => {
-    if (firstName.trim() === "" || lastName.trim() === "") {
+    if (editingFirstName.trim() === "" || editingLastName.trim() === "") {
       alert("First name and last name cannot be empty!");
       return;
     }
-    dispatch(updateProfileRequestAction(firstName, lastName));
+    dispatch(updateProfileRequestAction(editingFirstName, editingLastName));
     dispatch(toggleEditing()); 
   };
 
   const handleCancel = () => {
     if (user) {
-      setFirstName(user.firstName);
-      setLastName(user.lastName);
+      dispatch(updateEditingFirstName(user.firstName));
+      dispatch(updateEditingLastName(user.lastName));
     }
     dispatch(toggleEditing()); 
   };
@@ -61,18 +61,18 @@ const AccountSection = () => {
         {isEditing ? (
           <>
             <input
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              value={editingFirstName}
+              onChange={(e) => dispatch(updateEditingFirstName(e.target.value))}
             />
             <input
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              value={editingLastName}
+              onChange={(e) => dispatch(updateEditingLastName(e.target.value))}
             />
             <button onClick={handleSaveProfile} className="edit-button">Save</button>
             <button onClick={handleCancel} className="edit-button">Cancel</button>
           </>
         ) : (
-<button onClick={handleClick} className="edit-button">Edit Name</button>    
+          <button onClick={handleClick} className="edit-button">Edit Name</button>
         )}
       </div>
       <h2 className="sr-only">Accounts</h2>

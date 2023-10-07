@@ -4,6 +4,20 @@ import { fetchUserDetails } from './actions';
 
 const { logInSuccess, logInFailure } = authSlice.actions;
 
+export const apiRequest = async (method, url, payload, headers = {}) => {
+  try {
+    const response = await axios({
+      method,
+      url,
+      data: payload,
+      headers
+    });
+    return [response.data, null];
+  } catch (error) {
+    return [null, error];
+  }
+};
+
 const handleAppInitialize = (store) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -13,14 +27,12 @@ const handleAppInitialize = (store) => {
 
 const handleLoginRequest = async (store, action) => {
   const { email, password } = action.payload;
-  try {
-    const response = await axios.post('http://localhost:3001/api/v1/user/login', {
-      email,
-      password,
-    });
-    localStorage.setItem('token', response.data.body.token);
-    store.dispatch(logInSuccess(response.data.body));  // Envoie le corps de la réponse pour mettre à jour les détails de l'utilisateur
-  } catch (error) {
+  const [data, error] = await apiRequest('post', 'http://localhost:3001/api/v1/user/login', { email, password });
+  
+  if (data) {
+    localStorage.setItem('token', data.body.token);
+    store.dispatch(logInSuccess(data.body));
+  } else {
     store.dispatch(logInFailure(error.response ? error.response.data.message : 'Erreur lors de la connexion'));
   }
 };
@@ -28,17 +40,13 @@ const handleLoginRequest = async (store, action) => {
 const handleUpdateProfileRequest = async (store, action) => {
   const { firstName, lastName } = action.payload;
   const token = localStorage.getItem('token');
-  try {
-    const response = await axios.put('http://localhost:3001/api/v1/user/profile', {
-      firstName,
-      lastName,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    store.dispatch(updateProfileSuccess(response.data.body));
-  } catch (error) {
+  const [data, error] = await apiRequest('put', 'http://localhost:3001/api/v1/user/profile', { firstName, lastName }, {
+    'Authorization': `Bearer ${token}`
+  });
+  
+  if (data) {
+    store.dispatch(updateProfileSuccess(data.body));
+  } else {
     store.dispatch(updateProfileFailure(error.response.data.message || 'Failed to update profile'));
   }
 };
