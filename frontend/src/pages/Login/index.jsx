@@ -1,57 +1,46 @@
-import React, { useEffect, useState } from 'react'; 
-import { useDispatch } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logInRequestAction as logInRequest } from '../../redux/actions';
+import { updateEmail, updatePassword, updateRememberMe } from '../../redux/reducers';
 
 import './Login.css';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
-  // Ajout des états pour gérer les valeurs d'email et de mot de passe
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
 
+  const email = useSelector(state => state.auth.email);
+  const password = useSelector(state => state.auth.password);
+  const rememberMe = useSelector(state => state.auth.rememberMe);
+
+  // La logique localStorage a été retirée de useEffect
   useEffect(() => {
-    // Récupération des données stockées si la case "Remember Me" avait été cochée
-    const storedEmail = localStorage.getItem('rememberEmail');
-    const storedPassword = localStorage.getItem('rememberPassword');
-
-    if (storedEmail && storedPassword) {
-      setEmail(storedEmail);
-      setPassword(storedPassword);
-      setRememberMe(true);
+    if (rememberMe) {
+      const storedEmail = localStorage.getItem('rememberEmail');
+      const storedPassword = localStorage.getItem('rememberPassword');
+      if (storedEmail && storedPassword) {
+        dispatch(updateEmail(storedEmail));
+        dispatch(updatePassword(storedPassword));
+      }
     }
-
-  }, [dispatch]);
+  }, [rememberMe, dispatch]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-  
-  
-    if (email.trim() === '' || password.trim() === '') {
 
+    if (email.trim() === '' || password.trim() === '') {
       return;
     }
-  
+
     dispatch(logInRequest(email, password))
       .then(() => {
-        if (rememberMe) {
-          localStorage.setItem('rememberEmail', email);
-          localStorage.setItem('rememberPassword', password);
-        } else {
-          localStorage.removeItem('rememberEmail');
-          localStorage.removeItem('rememberPassword');
-        }
         navigate("/profile");
       })
       .catch(error => {
         console.error("Erreur lors de la connexion:", error);
       });
   };
-
 
   return (
     <>
@@ -62,14 +51,19 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label htmlFor="email">Email</label>
-              <input type="text" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="text" id="email" name="email" value={email} onChange={(e) => dispatch(updateEmail(e.target.value))} />
             </div>
             <div className="input-wrapper">
               <label htmlFor="password">Password</label>
-              <input type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input type="password" id="password" name="password" value={password} onChange={(e) => dispatch(updatePassword(e.target.value))} />
             </div>
             <div className="input-remember">
-              <input type="checkbox" id="remember-me" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              <input 
+                type="checkbox" 
+                id="remember-me" 
+                checked={rememberMe} 
+                onChange={(e) => dispatch(updateRememberMe(e.target.checked))} 
+              />
               <label htmlFor="remember-me">Remember me</label>
             </div>
             <button type="submit" className="sign-in-button">Sign In</button>

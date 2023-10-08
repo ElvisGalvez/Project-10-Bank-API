@@ -1,5 +1,7 @@
+// middlewares.js
+
 import axios from 'axios';
-import { authSlice, updateProfileSuccess, updateProfileFailure } from './reducers';
+import { authSlice } from './reducers';
 import { fetchUserDetails } from './actions';
 
 const { logInSuccess, logInFailure } = authSlice.actions;
@@ -19,9 +21,24 @@ export const apiRequest = async (method, url, payload, headers = {}) => {
 };
 
 const handleAppInitialize = (store) => {
+  // Récupération et dispatch des valeurs depuis le localStorage lors de l'initialisation
   const token = localStorage.getItem('token');
   if (token) {
     store.dispatch(fetchUserDetails());
+  }
+
+  const rememberMe = localStorage.getItem('rememberMe');
+  if (rememberMe) {
+    store.dispatch({ type: 'auth/updateRememberMe', payload: JSON.parse(rememberMe) });
+  }
+
+  if (JSON.parse(rememberMe)) {
+    const email = localStorage.getItem('rememberEmail');
+    const password = localStorage.getItem('rememberPassword');
+    if (email && password) {
+      store.dispatch({ type: 'auth/updateEmail', payload: email });
+      store.dispatch({ type: 'auth/updatePassword', payload: password });
+    }
   }
 };
 
@@ -32,22 +49,17 @@ const handleLoginRequest = async (store, action) => {
   if (data) {
     localStorage.setItem('token', data.body.token);
     store.dispatch(logInSuccess(data.body));
+
+    const rememberMe = store.getState().auth.rememberMe;
+    if (rememberMe) {
+      localStorage.setItem('rememberEmail', email);
+      localStorage.setItem('rememberPassword', password);
+    } else {
+      localStorage.removeItem('rememberEmail');
+      localStorage.removeItem('rememberPassword');
+    }
   } else {
     store.dispatch(logInFailure(error.response ? error.response.data.message : 'Erreur lors de la connexion'));
-  }
-};
-
-const handleUpdateProfileRequest = async (store, action) => {
-  const { firstName, lastName } = action.payload;
-  const token = localStorage.getItem('token');
-  const [data, error] = await apiRequest('put', 'http://localhost:3001/api/v1/user/profile', { firstName, lastName }, {
-    'Authorization': `Bearer ${token}`
-  });
-  
-  if (data) {
-    store.dispatch(updateProfileSuccess(data.body));
-  } else {
-    store.dispatch(updateProfileFailure(error.response.data.message || 'Failed to update profile'));
   }
 };
 
@@ -58,6 +70,16 @@ export const authMiddleware = store => next => async action => {
     handleAppInitialize(store);
   }
 
+  if (action.type === 'LOGOUT') {
+    const rememberMe = store.getState().auth.rememberMe;
+    if (!rememberMe) {
+      localStorage.removeItem('rememberEmail');
+      localStorage.removeItem('rememberPassword');
+    }
+    store.dispatch({ type: 'auth/updateEmail', payload: rememberMe ? localStorage.getItem('rememberEmail') : '' });
+    store.dispatch({ type: 'auth/updatePassword', payload: rememberMe ? localStorage.getItem('rememberPassword') : '' });
+  }
+
   if (action.type === 'auth/logInSuccess') {
     store.dispatch(fetchUserDetails());
   }
@@ -66,11 +88,11 @@ export const authMiddleware = store => next => async action => {
     handleLoginRequest(store, action);
   }
 
-  if (action.type === 'UPDATE_PROFILE_REQUEST') {
-    handleUpdateProfileRequest(store, action);
+  if (action.type === 'auth/updateRememberMe') {
+    localStorage.setItem('rememberMe', JSON.stringify(action.payload));
+    if (!action.payload) {
+      localStorage.removeItem('rememberEmail');
+      localStorage.removeItem('rememberPassword');
+    }
   }
-  if (action.type === 'auth/logOut') {
-    localStorage.removeItem('token');
-  }
-  
 };

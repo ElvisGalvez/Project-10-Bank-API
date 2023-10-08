@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchUserDetails } from './actions';  
+import { fetchUserDetails } from './actions';
 
 const authSlice = createSlice({
   name: 'auth',
@@ -10,10 +10,15 @@ const authSlice = createSlice({
     isEditing: false,
     editingFirstName: "",
     editingLastName: "",
+    email: '',
+    password: '',
+    rememberMe: !!localStorage.getItem('rememberMe'),
   },
   reducers: {
     logOut: (state) => {
       state.isAuthenticated = false;
+      state.email = '';  
+      state.password = '';  
       localStorage.removeItem('token');
     },
     logInSuccess: (state, action) => {
@@ -26,19 +31,27 @@ const authSlice = createSlice({
     toggleEditing: (state) => {
       state.isEditing = !state.isEditing;
     },
-
+    updateEmail: (state, action) => {
+      state.email = action.payload;
+    },
+    updatePassword: (state, action) => {
+      state.password = action.payload;
+    },
     updateEditingFirstName: (state, action) => {
       state.editingFirstName = action.payload;
     },
     updateEditingLastName: (state, action) => {
       state.editingLastName = action.payload;
     },
-
     updateProfileSuccess: (state, action) => {
       state.user = action.payload;
     },
     updateProfileFailure: (state, action) => {
       state.error = action.payload;
+    },
+    updateRememberMe: (state, action) => {
+      state.rememberMe = action.payload;
+      console.log('Mise à jour de rememberMe dans Redux:', action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -55,7 +68,9 @@ const authSlice = createSlice({
 export const { 
   logOut, logInSuccess, logInFailure, 
   updateProfileSuccess, updateProfileFailure, 
-  toggleEditing, updateEditingFirstName, updateEditingLastName 
+  toggleEditing, updateEditingFirstName, updateEditingLastName, 
+  updateEmail, updatePassword, updateRememberMe  
 } = authSlice.actions;
+
 export const authReducer = authSlice.reducer;
 export { authSlice };
