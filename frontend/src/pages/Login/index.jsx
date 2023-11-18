@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logInRequestAction as logInRequest } from '../../redux/actions';
@@ -15,6 +15,8 @@ const Login = () => {
   const email = useSelector(state => state.auth.email);
   const password = useSelector(state => state.auth.password);
   const rememberMe = useSelector(state => state.auth.rememberMe);
+
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (rememberMe) {
@@ -34,22 +36,17 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (email.trim() === '' || password.trim() === '') {
+      setFormError('Both email and password are required.');
       return;
     }
 
+    setFormError('');
     try {
-      await dispatch(logInRequest(email, password));
-      if (isAuthenticated) {
-        navigate("/profile");
-      }
+      dispatch(logInRequest(email, password));
     } catch (err) {
       console.error("Erreur lors de la connexion:", err);
     }
   };
-  
-  
-  
-  
 
   return (
     <>
@@ -60,23 +57,35 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label htmlFor="email">Email</label>
-              <input type="text" id="email" name="email" value={email} onChange={(e) => dispatch(updateEmail(e.target.value))} />
+              <input
+                type="text"
+                id="email"
+                name="email"
+                value={email || ''}
+                onChange={(e) => dispatch(updateEmail(e.target.value))}
+              />
             </div>
             <div className="input-wrapper">
               <label htmlFor="password">Password</label>
-              <input type="password" id="password" name="password" value={password} onChange={(e) => dispatch(updatePassword(e.target.value))} />
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={password || ''}
+                onChange={(e) => dispatch(updatePassword(e.target.value))}
+              />
             </div>
             <div className="input-remember">
-              <input 
-                type="checkbox" 
-                id="remember-me" 
-                checked={rememberMe} 
+              <input
+                type="checkbox"
+                id="remember-me"
+                checked={rememberMe}
                 onChange={(e) => dispatch(updateRememberMe(e.target.checked))}
               />
               <label htmlFor="remember-me">Remember me</label>
             </div>
-            
             <button type="submit" className="sign-in-button">Sign In</button>
+            {formError && <div className="error-message">{formError}</div>}
           </form>
           {error && <div className="error-message">{error}</div>}
         </section>
