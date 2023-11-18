@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AccountItem from '../../components/AccountItem';
 import './AccountSection.css';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfileRequestAction } from '../../redux/actions';
+import { updateUserProfile, fetchUserDetails } from '../../redux/actions';
 import { 
   toggleEditing,
   updateEditingFirstName,
@@ -32,9 +32,27 @@ const AccountSection = () => {
       alert("First name and last name cannot be empty!");
       return;
     }
-    dispatch(updateProfileRequestAction(editingFirstName, editingLastName));
-    dispatch(toggleEditing()); 
+    const userData = {
+      firstName: editingFirstName,
+      lastName: editingLastName
+    };
+    dispatch(updateUserProfile(userData))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchUserDetails());
+        dispatch(toggleEditing()); 
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la mise à jour du profil :", error);
+      });
   };
+  
+  useEffect(() => {
+    if (user) {
+      dispatch(updateEditingFirstName(user.firstName));
+      dispatch(updateEditingLastName(user.lastName));
+    }
+  }, [user, dispatch]);
 
   const handleCancel = () => {
     if (user) {

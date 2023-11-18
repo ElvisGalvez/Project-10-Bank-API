@@ -18,13 +18,12 @@ function AppInitializer({ children }) {
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);  
 
   useEffect(() => {
-    dispatch(initializeApp());  // Dispatch l'action d'initialisation une fois au premier rendu
+    dispatch(initializeApp());  
   }, [dispatch]);
 
-  // useEffect pour écouter les changements dans l'historique de navigation
   useEffect(() => {
     const unlisten = window.addEventListener('popstate', () => {
-      if (!isAuthenticated) return;  // Pas besoin de déconnecter si déjà déconnecté
+      if (!isAuthenticated) return;  
 
       dispatch(logOut());
     });
@@ -40,7 +39,6 @@ function AppInitializer({ children }) {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-// Le Provider rend le store disponible pour tous les composants de l'application
 root.render(
   <React.StrictMode>
     <Provider store={store}> 

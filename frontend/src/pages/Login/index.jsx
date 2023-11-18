@@ -9,38 +9,47 @@ import './Login.css';
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  const error = useSelector(state => state.auth.error);
 
   const email = useSelector(state => state.auth.email);
   const password = useSelector(state => state.auth.password);
   const rememberMe = useSelector(state => state.auth.rememberMe);
 
-  // La logique localStorage a été retirée de useEffect
   useEffect(() => {
     if (rememberMe) {
       const storedEmail = localStorage.getItem('rememberEmail');
-      const storedPassword = localStorage.getItem('rememberPassword');
-      if (storedEmail && storedPassword) {
+      if (storedEmail) {
         dispatch(updateEmail(storedEmail));
-        dispatch(updatePassword(storedPassword));
       }
     }
   }, [rememberMe, dispatch]);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/profile");
+    }
+  }, [isAuthenticated, navigate]);
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     if (email.trim() === '' || password.trim() === '') {
       return;
     }
 
-    dispatch(logInRequest(email, password))
-      .then(() => {
+    try {
+      await dispatch(logInRequest(email, password));
+      if (isAuthenticated) {
         navigate("/profile");
-      })
-      .catch(error => {
-        console.error("Erreur lors de la connexion:", error);
-      });
+      }
+    } catch (err) {
+      console.error("Erreur lors de la connexion:", err);
+    }
   };
+  
+  
+  
+  
 
   return (
     <>
@@ -62,12 +71,14 @@ const Login = () => {
                 type="checkbox" 
                 id="remember-me" 
                 checked={rememberMe} 
-                onChange={(e) => dispatch(updateRememberMe(e.target.checked))} 
+                onChange={(e) => dispatch(updateRememberMe(e.target.checked))}
               />
               <label htmlFor="remember-me">Remember me</label>
             </div>
+            
             <button type="submit" className="sign-in-button">Sign In</button>
           </form>
+          {error && <div className="error-message">{error}</div>}
         </section>
       </main>
     </>

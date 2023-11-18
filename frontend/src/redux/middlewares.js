@@ -1,10 +1,8 @@
-// middlewares.js
-
 import axios from 'axios';
-import { authSlice } from './reducers';
 import { fetchUserDetails } from './actions';
 
-const { logInSuccess, logInFailure } = authSlice.actions;
+import { logInSuccess, logInFailure, updateEmail, updateRememberMe, } from '../redux/reducers';
+
 
 export const apiRequest = async (method, url, payload, headers = {}) => {
   try {
@@ -21,47 +19,41 @@ export const apiRequest = async (method, url, payload, headers = {}) => {
 };
 
 const handleAppInitialize = (store) => {
-  // Récupération et dispatch des valeurs depuis le localStorage lors de l'initialisation
   const token = localStorage.getItem('token');
   if (token) {
     store.dispatch(fetchUserDetails());
   }
 
-  const rememberMe = localStorage.getItem('rememberMe');
+  const rememberMe = localStorage.getItem('rememberMe') === 'true';
+  store.dispatch(updateRememberMe(rememberMe));
   if (rememberMe) {
-    store.dispatch({ type: 'auth/updateRememberMe', payload: JSON.parse(rememberMe) });
-  }
-
-  if (JSON.parse(rememberMe)) {
     const email = localStorage.getItem('rememberEmail');
-    const password = localStorage.getItem('rememberPassword');
-    if (email && password) {
-      store.dispatch({ type: 'auth/updateEmail', payload: email });
-      store.dispatch({ type: 'auth/updatePassword', payload: password });
+    if (email) {
+      store.dispatch(updateEmail(email));
     }
   }
 };
 
 const handleLoginRequest = async (store, action) => {
   const { email, password } = action.payload;
-  const [data, error] = await apiRequest('post', 'http://localhost:3001/api/v1/user/login', { email, password });
-  
-  if (data) {
-    localStorage.setItem('token', data.body.token);
-    store.dispatch(logInSuccess(data.body));
+  try {
+    const response = await axios.post('http://localhost:3001/api/v1/user/login', { email, password });
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      store.dispatch(logInSuccess(response.data));
 
-    const rememberMe = store.getState().auth.rememberMe;
-    if (rememberMe) {
-      localStorage.setItem('rememberEmail', email);
-      localStorage.setItem('rememberPassword', password);
+      const rememberMe = store.getState().auth.rememberMe;
+      if (rememberMe) {
+        localStorage.setItem('rememberEmail', email);
+      }
     } else {
-      localStorage.removeItem('rememberEmail');
-      localStorage.removeItem('rememberPassword');
+      store.dispatch(logInFailure('Invalid login credentials'));
     }
-  } else {
-    store.dispatch(logInFailure(error.response ? error.response.data.message : 'Erreur lors de la connexion'));
+  } catch (error) {
+    store.dispatch(logInFailure(error.response ? error.response.data.message : 'Login failed'));
   }
 };
+
 
 export const authMiddleware = store => next => async action => {
   next(action);
@@ -74,10 +66,8 @@ export const authMiddleware = store => next => async action => {
     const rememberMe = store.getState().auth.rememberMe;
     if (!rememberMe) {
       localStorage.removeItem('rememberEmail');
-      localStorage.removeItem('rememberPassword');
     }
     store.dispatch({ type: 'auth/updateEmail', payload: rememberMe ? localStorage.getItem('rememberEmail') : '' });
-    store.dispatch({ type: 'auth/updatePassword', payload: rememberMe ? localStorage.getItem('rememberPassword') : '' });
   }
 
   if (action.type === 'auth/logInSuccess') {
@@ -92,7 +82,6 @@ export const authMiddleware = store => next => async action => {
     localStorage.setItem('rememberMe', JSON.stringify(action.payload));
     if (!action.payload) {
       localStorage.removeItem('rememberEmail');
-      localStorage.removeItem('rememberPassword');
     }
   }
 };
